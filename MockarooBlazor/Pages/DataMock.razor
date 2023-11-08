@@ -1,0 +1,124 @@
+﻿@page "/datamock"
+@using Mockaroo.Services;
+@using MockarooLibrary.Model;
+@using MockarooLibrary.Helpers;
+@using MockarooLibrary.Model.DataTypes;
+@using MockarooLibrary.Repository;
+@inject IMockService MockService;
+@inject ITableEntityRepository TableEntityRepository
+@inject IJSRuntime JS
+<style media="screen">
+    table {
+        border-collapse: collapse;
+  
+    }
+
+        table td {
+            padding: 0.5rem;
+            border: 5px solid orange;
+        }
+
+        table th {
+            padding: 0.5rem;
+            border: 5px solid ForestGreen;
+        }
+</style>
+<h3>DataMock</h3>
+ <input placeholder="Table Name" type="text" @bind = "tableName">
+ <input placeholder="Row count" type="number" @bind = "rowCount">
+<button class="btn btn-primary" @onclick="AddNewTable">Add new Table</button>
+ @if (! String.IsNullOrEmpty(tableName) && rowCount!=null)
+{
+     <div>
+    <input placeHolder="Row Names" type="text" @bind="columnName">
+       
+    <select  @bind= "@columnType" >
+        @foreach (var item in GetAllEntityTypes())
+        {
+            <option value="@item.Value">@item.Value</option>
+        }
+    </select>
+ 
+    <button class="btn btn-primary" @onclick="AddNewRow">Add new row</button>
+ </div>
+ <div>
+    <button class="btn btn-primary" @onclick="GenerateAndDownloadSqlFile">Download sql file</button>
+ </div>
+ @if(table!=null)
+ {
+     <table border="1" rules="cols">
+     <thead>
+         <tr>
+                <th colspan="2">Текущая схема таблицы базы данных</th>
+         </tr>
+         
+         <tr>
+                <td>Название таблицы: @table.Name</td>
+                <td>Количество столбцвов: @table.RowsCount</td>
+         </tr>
+         @if(table.TableEntitySchema!=null && table.TableEntitySchema.Count>0)
+                {
+                    @if(table.TableEntitySchema.Count>0)
+                    {
+                        <tr>
+                            <td>Название столбца</td>
+                            <td>Тип стобца</td>
+                        </tr>
+                    }
+                }
+              
+        
+     </thead>
+     <tbody>
+         @foreach(var item in table.TableEntitySchema)
+                {
+                    @if(item!=null)
+                    {
+                    <tr>
+                        <td>@item.NameInTable</td>
+                        <td>@item.GetType().Name</td>
+                    </tr>
+                    }
+                  
+                }
+         
+     </tbody>
+     
+</table>
+
+}
+
+}
+
+@code {
+    Table table;
+    string tableName;
+    int rowCount;
+    string typeName;
+    string columnName;
+    string columnType;
+    TableEntity entityType= new TableEntity();
+    private void AddNewRow()
+    {
+        
+        var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(columnName,columnType);
+        table.AddNewEntityToTableSchema((TableEntity)entity);
+
+    }
+    private void AddNewTable()
+    {
+        table = new Table(tableName,rowCount);
+    }
+    private async void GenerateAndDownloadSqlFile()
+    {
+        var fileStream = await  MockService.GenerateFileStreamWithSqlStatements(table);
+        var fileName = "query.sql";
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+    private List<TableEntity> GetAllEntityTypes()
+    {
+        return TableEntityRepository.GetAll(typeof(EntityType));
+    }
+}
