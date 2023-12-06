@@ -4,6 +4,7 @@ using Mockaroo.Services;
 using MockarooBlazor.Data;
 using MockarooLibrary.Repository;
 using MockarooLibrary.Services.GenerateService;
+using MockarooLibrary.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
