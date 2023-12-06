@@ -4,90 +4,81 @@
 @using MockarooLibrary.Helpers;
 @using MockarooLibrary.Model.DataTypes;
 @using MockarooLibrary.Repository;
-@inject IMockService MockService;
+@using MockarooLibrary.Services.GenerateService;
+@inject ISqlGenerationService SqlGenerationService;
 @inject ITableEntityRepository TableEntityRepository
 @inject IJSRuntime JS
-<style media="screen">
-    table {
-        border-collapse: collapse;
-  
-    }
 
-        table td {
-            padding: 0.5rem;
-            border: 5px solid orange;
-        }
-
-        table th {
-            padding: 0.5rem;
-            border: 5px solid ForestGreen;
-        }
-</style>
 <h3>DataMock</h3>
- <input placeholder="Table Name" type="text" @bind = "tableName">
- <input placeholder="Row count" type="number" @bind = "rowCount">
+
+<div class="mb-3">
+    <label for="tableName" class="form-label">Table Name</label>
+    <input type="text" class="form-control" id="tableName" @bind="tableName">
+</div>
+
+<div class="mb-3">
+    <label for="rowCount" class="form-label">Row count</label>
+    <input type="number" class="form-control" id="rowCount" @bind="rowCount">
+</div>
+
 <button class="btn btn-primary" @onclick="AddNewTable">Add new Table</button>
- @if (! String.IsNullOrEmpty(tableName) && rowCount!=null)
+
+@if (!String.IsNullOrEmpty(tableName) && rowCount != null)
 {
-     <div>
-    <input placeHolder="Row Names" type="text" @bind="columnName">
-       
-    <select  @bind= "@columnType" >
-        @foreach (var item in GetAllEntityTypes())
-        {
-            <option value="@item.Value">@item.Value</option>
-        }
-    </select>
- 
-    <button class="btn btn-primary" @onclick="AddNewRow">Add new row</button>
- </div>
- <div>
-    <button class="btn btn-primary" @onclick="GenerateAndDownloadSqlFile">Download sql file</button>
- </div>
- @if(table!=null)
- {
-     <table border="1" rules="cols">
-     <thead>
-         <tr>
-                <th colspan="2">Текущая схема таблицы базы данных</th>
-         </tr>
-         
-         <tr>
-                <td>Название таблицы: @table.Name</td>
-                <td>Количество столбцвов: @table.RowsCount</td>
-         </tr>
-         @if(table.TableEntitySchema!=null && table.TableEntitySchema.Count>0)
+    <div class="mb-3">
+        <label for="columnName" class="form-label">Row Names</label>
+        <input type="text" class="form-control" @bind="columnName">
+
+        <label for="columnType" class="form-label">Column Type</label>
+        <select class="form-select" @bind="@columnType">
+            @foreach (var item in GetAllEntityTypes())
+            {
+                <option value="@item.Value">@item.Value</option>
+            }
+        </select>
+
+        <button class="btn btn-primary" @onclick="AddNewRow">Add new row</button>
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="GenerateAndDownloadSqlFile">Download SQL file</button>
+    </div>
+
+    @if (table != null)
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2">Current Database Table Schema</th>
+                </tr>
+
+                <tr>
+                    <td>Table Name: @table.Name</td>
+                    <td>Number of Columns: @table.RowsCount</td>
+                </tr>
+
+                @if (table.TableEntitySchema != null && table.TableEntitySchema.Count > 0)
                 {
-                    @if(table.TableEntitySchema.Count>0)
+                    <tr>
+                        <th>Column Name</th>
+                        <th>Column Type</th>
+                    </tr>
+                }
+            </thead>
+            <tbody>
+                @foreach (var item in table.TableEntitySchema)
+                {
+                    @if (item != null)
                     {
                         <tr>
-                            <td>Название столбца</td>
-                            <td>Тип стобца</td>
+                            <td>@item.NameInTable</td>
+                            <td>@item.GetType().Name</td>
                         </tr>
                     }
                 }
-              
-        
-     </thead>
-     <tbody>
-         @foreach(var item in table.TableEntitySchema)
-                {
-                    @if(item!=null)
-                    {
-                    <tr>
-                        <td>@item.NameInTable</td>
-                        <td>@item.GetType().Name</td>
-                    </tr>
-                    }
-                  
-                }
-         
-     </tbody>
-     
-</table>
-
-}
-
+            </tbody>
+        </table>
+    }
 }
 
 @code {
@@ -97,26 +88,28 @@
     string typeName;
     string columnName;
     string columnType;
-    TableEntity entityType= new TableEntity();
+    TableEntity entityType = new TableEntity();
+
     private void AddNewRow()
     {
-        
-        var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(columnName,columnType);
+        var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(columnName, columnType);
         table.AddNewEntityToTableSchema((TableEntity)entity);
-
     }
+
     private void AddNewTable()
     {
-        table = new Table(tableName,rowCount);
+        table = new Table(tableName, rowCount);
     }
+
     private async void GenerateAndDownloadSqlFile()
     {
-        var fileStream = await  MockService.GenerateFileStreamWithSqlStatements(table);
+        var fileStream = await SqlGenerationService.GenerateFileStream(table);
         var fileName = "query.sql";
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
+
     private List<TableEntity> GetAllEntityTypes()
     {
         return TableEntityRepository.GetAll(typeof(EntityType));

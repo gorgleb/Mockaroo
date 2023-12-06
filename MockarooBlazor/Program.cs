@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Mockaroo.Services;
 using MockarooBlazor.Data;
 using MockarooLibrary.Repository;
+using MockarooLibrary.Services.GenerateService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,7 @@ builder.Services.AddSingleton<WeatherForecastService>();
 string connectionString = "Host=localhost;Port=5432;Database=Mockaroo;Username=postgres;Password=1312";
 builder.Services.AddTransient<ITableEntityRepository, TableEntityRepository>(provider => new TableEntityRepository(connectionString));
 builder.Services.AddTransient<IMockService, MockService>();
-
+builder.Services.AddTransient<ISqlGenerationService, SqlGenerationService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
