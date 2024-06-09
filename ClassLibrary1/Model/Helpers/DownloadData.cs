@@ -15,5 +15,10 @@
         /// Дата
         /// </summary>
         public Stream FileStream { get; set; }
+
+        /// <summary>
+        /// Сгенерированные данные в формате строки
+        /// </summary>
+        public string Content { get; set; }
     }
 }

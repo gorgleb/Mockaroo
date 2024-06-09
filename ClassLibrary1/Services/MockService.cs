@@ -1,6 +1,6 @@
 ﻿using Mockaroo.Constants;
 using MockarooLibrary.Model;
-using MockarooLibrary.Repository;
+using MockarooLibrary.Repository.Interfaces;
 using System.Text;
 
 namespace Mockaroo.Services

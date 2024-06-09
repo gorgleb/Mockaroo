@@ -1,27 +1,11 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
 using MockarooLibrary.Model;
-using MockarooLibrary.Model.DataTypes;
+using MockarooLibrary.Repository.Interfaces;
 using Npgsql;
 using System.Data;
 
 namespace MockarooLibrary.Repository
 {
-    public interface ITableEntityRepository
-    {
-        void Create(TableEntity tableEntity);
-
-        void Delete(int id, Type entityType);
-
-        TableEntity Get(int id, Type entityType);
-
-        List<TableEntity> GetAll(Type entityType);
-
-        List<TableEntity> GetEntities(int neededAmount, Type entityType);
-
-        void Update(TableEntity tableEntity);
-    }
-
     public class TableEntityRepository : ITableEntityRepository
     {
         private string connectionString = null;

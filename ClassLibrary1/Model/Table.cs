@@ -9,6 +9,10 @@ namespace MockarooLibrary.Model
         public List<List<TableEntity>> TableEntities { get; private set; }
         public List<TableEntity> TableEntitySchema { get; private set; }
 
+        public Table()
+        {
+        }
+
         public Table(string name, int rowsCount)
         {
             Name = name;

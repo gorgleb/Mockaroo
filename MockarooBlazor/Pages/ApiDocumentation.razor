@@ -1,0 +1,96 @@
+﻿@page "/api-docs"
+@inject IJSRuntime JS
+
+<PageTitle>Документация Mocker Web API</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">Документация Mocker Web API</h1>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Введение</h2>
+                <p>Mocker Web API позволяет программно генерировать тестовые данные в различных форматах, включая CSV, SQL, XML и JSON. Этот API может быть полезен для разработчиков, тестировщиков и аналитиков, которым требуются реалистичные наборы данных для тестирования или демонстрации своих приложений.</p>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Базовый URL</h2>
+                <p>Базовый URL для Mocker Web API:</p>
+                <pre class="bg-black p-2">https://ya-ne-arendoval-server.com/api</pre>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Аутентификация</h2>
+                <p>Для использования Mocker Web API требуется аутентификация с помощью API-ключа. Вы можете получить API-ключ, создав учетную запись на сайте Mocker.</p>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Конечные точки</h2>
+                <div class="mb-4">
+                    <h3 class="mb-2">Генерация данных</h3>
+                    <p>Эта конечная точка позволяет генерировать тестовые данные на основе предоставленной схемы и параметров.</p>
+                    <pre class="bg-black p-2">POST /generate</pre>
+                    <p><strong>Тело запроса:</strong></p>
+                    <pre class="bg-black p-2">
+{
+  "schema": [
+    { "name": "first_name", "type": "name.first_name" },
+    { "name": "last_name", "type": "name.last_name" },
+    { "name": "email", "type": "email" }
+  ],
+  "count": 10,
+  "format": "csv"
+}
+                    </pre>
+                    <p><strong>Ответ:</strong></p>
+                    <p>Сгенерированные данные в запрошенном формате (CSV, SQL, XML, JSON).</p>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="mb-2">Сохранение пользовательского набора данных</h3>
+                    <p>Эта конечная точка позволяет сохранить пользовательский набор данных для последующего использования.</p>
+                    <pre class="bg-black p-2">POST /user-data-sets</pre>
+                    <p><strong>Тело запроса:</strong></p>
+                    <pre class="bg-black p-2">
+{
+  "name": "my_data_set",
+  "data": "first_name,last_name,email\nJohn,Doe,john.doe@example.com\n..."
+}
+                    </pre>
+                    <p><strong>Ответ:</strong></p>
+                    <pre class="bg-black p-2">
+{
+  "success": true,
+  "message": "Пользовательский набор данных успешно сохранен."
+}
+                    </pre>
+                </div>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Обработка ошибок</h2>
+                <p>В случае ошибки API вернет соответствующий HTTP-статус и сообщение об ошибке в теле ответа.</p>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Ограничение скорости</h2>
+                <p>Mocker Web API имеет ограничение скорости для предотвращения злоупотреблений. Пожалуйста, обратитесь к документации для получения информации о текущих ограничениях.</p>
+            </div>
+
+            <div class="bg-dark text-white p-4 mb-4">
+                <h2 class="mb-3">Поддержка</h2>
+                <p>Если у вас есть вопросы или вам требуется дополнительная помощь, пожалуйста, свяжитесь с нашей службой поддержки по адресу <a href="mailto:support@mocker.com">support@mocker.com</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("hljs.highlightAll");
+        }
+    }
+}

@@ -8,9 +8,9 @@ namespace MockarooLibrary.Processors
     /// <summary>
     /// Реализует логику генерации json данных
     /// </summary>
-    public class JsonProcessor : MockProcessor
+    public class JsonProcessor : Generator
     {
-        public JsonProcessor() : base(null)
+        public JsonProcessor()
         {
         }
 
@@ -19,21 +19,29 @@ namespace MockarooLibrary.Processors
         /// </summary>
         /// <param name="curentTable"></param>
         /// <returns></returns>
-        protected override async Task<string> GenerateData(Table currentTable)
+        public override async Task<string> GenerateData(Table currentTable, Dictionary<string, string>? parameters)
         {
             var sb = new StringBuilder();
+            sb.Append("[");
             for (int i = 0; i < currentTable.RowsCount; i++)
             {
                 sb.Append("{");
                 for (int j = 0; j < currentTable.TableEntitySchema.Count; j++)
                 {
                     var value = await GetValue(j, currentTable);
-                    sb.Append($"""{currentTable.TableEntitySchema[j].Value}":"{value}",""");
+                    sb.Append($"\"{currentTable.TableEntitySchema[j].NameInTable}\":\"{value}\",");
                 }
-                sb.Remove(sb.Length - 1, 1)
-                    .Append("}")
+
+                if (i < currentTable.RowsCount - 1)
+                    sb.Remove(sb.Length - 1, 1)
+                    .Append("},")
                     .Append("\n");
+                else
+                    sb.Remove(sb.Length - 1, 1)
+                    .Append("}")
+                    .Append("]");
             }
+
             return sb.ToString();
         }
 

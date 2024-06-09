@@ -1,10 +1,62 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+/* Установка черного фона для всего body */
+body {
+    background-color: black;
+    color: white;
 }
 
-h1:focus {
+/* Установка белого цвета для ссылок */
+a {
+    color: white;
+}
+
+/* Установка белого цвета для заголовков */
+h1, h2, h3, h4, h5, h6 {
+    color: white;
+}
+.top-margin {
+    margin-top: 2rem;
+}
+.form-control-file::placeholder {
+    color: #999; /* Цвет текста плейсхолдера */
+    font-style: italic; /* Стиль текста плейсхолдера (необязательно) */
+}
+
+/* Установка белого цвета для текста внутри компонентов */
+::deep * {
+    color: white;
+}
+code {
+    font-family: 'Fira Code', monospace;
+}
+/* Установка черного фона и белого текста для всего body */
+body {
+    background-color: black;
+    color: white;
+}
+
+/* Установка белого цвета для ссылок */
+a {
+    color: white;
+}
+
+/* Установка белого цвета для заголовков */
+h1, h2, h3, h4, h5, h6 {
+    color: white;
+}
+
+/* Установка белого цвета для текста внутри компонентов */
+::deep * {
+    color: white;
+}
+
+.nav-menu-body {
+    background-color: black;
+    color: white;
+    h1: focus
+
+{
     outline: none;
 }
 
@@ -19,7 +71,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {

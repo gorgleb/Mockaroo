@@ -1,8 +1,8 @@
 ﻿using MockarooLibrary.Model;
 using MockarooLibrary.Model.Enums;
 using MockarooLibrary.Model.Helpers;
-using MockarooLibrary.Repository;
-using System.Data;
+using MockarooLibrary.Processors.Interfaces;
+using MockarooLibrary.Repository.Interfaces;
 using System.Text;
 
 namespace MockarooLibrary.Processors
@@ -11,7 +11,7 @@ namespace MockarooLibrary.Processors
     /// Прдеоставляет функционал для генерации тестовых данных и возмоджность переопределения методов, для производных классов,
     /// которые нужны для обработки данных в конкретные форматы, по типу xml, json, sql и т.д.
     /// </summary>
-    public abstract class MockProcessor
+    public class MockProcessor : IMockProcessor
     {
         private ITableEntityRepository tableEntityRepository;
 
@@ -20,26 +20,53 @@ namespace MockarooLibrary.Processors
             this.tableEntityRepository = tableEntityRepository;
         }
 
-        public async Task<DownloadData?> ProcessDataGeneration(Table? currentTable, OutputDataTypes type)
+        public async Task<DownloadData?> ProcessDataGeneration(Table? currentTable, Dictionary<string, string>? parameters, OutputDataTypes type)
         {
-            return null;
-            await IsValid(currentTable);
-            switch (type)
+            try
             {
-                case OutputDataTypes.CSV:
-                    break;
+                await IsValid(currentTable);
+                await FillTable(currentTable);
+                var data = new DownloadData();
+                string result = "";
+                switch (type)
+                {
+                    case OutputDataTypes.CSV:
+                        var csvProcessor = new CsvProcessor();
+                        result = await csvProcessor.GenerateData(currentTable, parameters);
+                        data.FileExtensionName = "csv";
+                        break;
 
-                case OutputDataTypes.XML:
-                    break;
+                    case OutputDataTypes.XML:
+                        var xmlProcessor = new XmlProcessor();
+                        parameters["rootName"] = "root";
+                        parameters["recordName"] = "record";
+                        result = await xmlProcessor.GenerateData(currentTable, parameters);
+                        data.FileExtensionName = "xml";
+                        break;
 
-                case OutputDataTypes.JSON:
-                    break;
+                    case OutputDataTypes.JSON:
+                        var jsonProcessor = new JsonProcessor();
+                        result = await jsonProcessor.GenerateData(currentTable, parameters);
+                        data.FileExtensionName = "json";
+                        break;
 
-                case OutputDataTypes.SQL:
-                    break;
+                    case OutputDataTypes.SQL:
+                        var sqlProcessor = new SqlProcessor();
+                        result = await sqlProcessor.GenerateData(currentTable, parameters);
+                        data.FileExtensionName = "sql";
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+                data.Content = result;
+                data.FileStream = await GenerateFileStream(result);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                var e = ex.Message;
+                return null;
             }
         }
 
@@ -54,12 +81,10 @@ namespace MockarooLibrary.Processors
                 throw new ArgumentNullException("Таблица данных равна null!");
             }
 
-            if (currentTable.TableEntities == null || currentTable.TableEntities.Count == 0)
+            if (currentTable.TableEntitySchema == null || currentTable.TableEntitySchema.Count == 0)
                 throw new ArgumentException("В таблице данных отсутствуют столбцы");
             return true;
         }
-
-        protected abstract Task<string> GenerateData(Table curentTable);
 
         /// <summary>
         /// Преобразует строку с данными в поток данных
@@ -79,5 +104,10 @@ namespace MockarooLibrary.Processors
                 currentTable.AddNewEntityToTable(tableEntityRepository.GetEntities(currentTable.RowsCount, item.GetType()));
             }
         }
+    }
+
+    public abstract class Generator
+    {
+        public abstract Task<string> GenerateData(Table curentTable, Dictionary<string, string>? parameters);
     }
 }

@@ -7,9 +7,9 @@ namespace MockarooLibrary.Processors
     /// <summary>
     /// Реализует логику генерации sql данных
     /// </summary>
-    public class SqlProcessor : MockProcessor
+    public class SqlProcessor : Generator
     {
-        public SqlProcessor() : base(null)
+        public SqlProcessor()
         {
         }
 
@@ -18,7 +18,7 @@ namespace MockarooLibrary.Processors
         /// </summary>
         /// <param name="curentTable"></param>
         /// <returns></returns>
-        protected override async Task<string> GenerateData(Table currentTable)
+        public override async Task<string> GenerateData(Table currentTable, Dictionary<string, string>? parameters)
         {
             StringBuilder queryBuilder = new StringBuilder();
             var columnNames = await GenerateColumnNames(currentTable);

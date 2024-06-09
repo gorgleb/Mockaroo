@@ -1,0 +1,131 @@
+﻿@page "/datamockzzz"
+@using Mockaroo.Services;
+@using MockarooLibrary.Model;
+@using MockarooLibrary.Helpers;
+@using MockarooLibrary.Model.DataTypes;
+@using MockarooLibrary.Model.Enums
+@using MockarooLibrary.Processors
+@using MockarooLibrary.Processors.Interfaces
+@using MockarooLibrary.Repository;
+@using MockarooLibrary.Repository.Interfaces
+@using MockarooLibrary.Services.GenerateService;
+@inject ISqlGenerationService SqlGenerationService;
+@inject ITableEntityRepository TableEntityRepository
+@inject IJSRuntime JS
+@inject IMockProcessor MockProcessor;
+
+<h3>DataMock</h3>
+
+<div class="mb-3">
+    <label for="tableName" class="form-label">Table Name</label>
+    <input type="text" class="form-control" id="tableName" @bind="tableName">
+</div>
+
+<div class="mb-3">
+    <label for="rowCount" class="form-label">Row count</label>
+    <input type="number" class="form-control" id="rowCount" @bind="rowCount">
+</div>
+
+<button class="btn btn-primary" @onclick="AddNewTable">Add new Table</button>
+
+@if (!String.IsNullOrEmpty(tableName) && rowCount != null)
+{
+    <div class="mb-3">
+        <label for="columnName" class="form-label">Row Names</label>
+        <input type="text" class="form-control" @bind="columnName">
+
+        <label for="columnType" class="form-label">Column Type</label>
+        <select class="form-select" @bind="@columnType">
+            @foreach (var item in GetAllEntityTypes())
+            {
+                <option value="@item.Value">@item.Value</option>
+            }
+        </select>
+
+        <button class="btn btn-primary" @onclick="AddNewRow">Add new row</button>
+        <select class="form-select" @bind="@dataType">
+            @foreach (var item in Enum.GetValues(typeof(OutputDataTypes)))
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="GenerateAndDownloadData">Download SQL file</button>
+    </div>
+
+    @if (table != null)
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th colspan="2">Current Database Table Schema</th>
+                </tr>
+
+                <tr>
+                    <td>Table Name: @table.Name</td>
+                    <td>Number of Columns: @table.RowsCount</td>
+                </tr>
+
+                @if (table.TableEntitySchema != null && table.TableEntitySchema.Count > 0)
+                {
+                    <tr>
+                        <th>Column Name</th>
+                        <th>Column Type</th>
+                    </tr>
+                }
+            </thead>
+            <tbody>
+                @foreach (var item in table.TableEntitySchema)
+                {
+                    @if (item != null)
+                    {
+                        <tr>
+                            <td>@item.NameInTable</td>
+                            <td>@item.GetType().Name</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    Table table;
+    string tableName;
+    int rowCount;
+    string typeName;
+    string columnName;
+    string columnType;
+        Dictionary<string, string> parameters = new Dictionary<string, string>();
+    TableEntity entityType = new TableEntity();
+    OutputDataTypes dataType;
+
+    private void AddNewRow()
+    {
+        var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(columnName, columnType);
+        table.AddNewEntityToTableSchema((TableEntity)entity);
+    }
+
+    private void AddNewTable()
+    {
+        table = new Table(tableName, rowCount);
+    }
+
+    private async void GenerateAndDownloadData()
+    {
+            var processor = new MockProcessor(TableEntityRepository);
+            var data = await processor.ProcessDataGeneration(table, parameters, dataType);
+            var fileName = $"query.{data.FileExtensionName}";
+            using var streamRef = new DotNetStreamReference(stream: data.FileStream);
+
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+
+    private List<TableEntity> GetAllEntityTypes()
+    {
+        return TableEntityRepository.GetAll(typeof(EntityType));
+    }
+}

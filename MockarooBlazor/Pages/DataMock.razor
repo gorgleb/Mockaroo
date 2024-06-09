@@ -1,117 +1,133 @@
 ﻿@page "/datamock"
-@using Mockaroo.Services;
-@using MockarooLibrary.Model;
-@using MockarooLibrary.Helpers;
-@using MockarooLibrary.Model.DataTypes;
-@using MockarooLibrary.Repository;
-@using MockarooLibrary.Services.GenerateService;
-@inject ISqlGenerationService SqlGenerationService;
-@inject ITableEntityRepository TableEntityRepository
-@inject IJSRuntime JS
+@using MockarooLibrary.Helpers
+@using MockarooLibrary.Model
+@using MockarooLibrary.Model.Enums
+@using MockarooLibrary.Processors.Interfaces
+@using MockarooLibrary.Repository.Interfaces
+@inject ITableEntityRepository TableEntityRepository;
+@inject IJSRuntime JS;
+@inject IMockProcessor MockProcessor;
+<PageTitle>Data Mock</PageTitle>
 
-<h3>DataMock</h3>
+<div class="container bg-black text-white p-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">Генерация тестовых данных</h1>
 
-<div class="mb-3">
-    <label for="tableName" class="form-label">Table Name</label>
-    <input type="text" class="form-control" id="tableName" @bind="tableName">
-</div>
+            <div class="mb-4">
+                <label for="tableNameInput" class="form-label">Название таблицы</label>
+                <input type="text" class="form-control bg-black text-white rounded" id="tableNameInput" placeholder="Введите название таблицы" @bind-value="TableName" />
+            </div>
 
-<div class="mb-3">
-    <label for="rowCount" class="form-label">Row count</label>
-    <input type="number" class="form-control" id="rowCount" @bind="rowCount">
-</div>
+            <div class="mb-4">
+                <label for="rowCountInput" class="form-label">Количество строк</label>
+                <input type="number" class="form-control bg-black text-white rounded" id="rowCountInput" placeholder="Введите количество строк" @bind-value="RowCount" />
+            </div>
 
-<button class="btn btn-primary" @onclick="AddNewTable">Add new Table</button>
-
-@if (!String.IsNullOrEmpty(tableName) && rowCount != null)
-{
-    <div class="mb-3">
-        <label for="columnName" class="form-label">Row Names</label>
-        <input type="text" class="form-control" @bind="columnName">
-
-        <label for="columnType" class="form-label">Column Type</label>
-        <select class="form-select" @bind="@columnType">
-            @foreach (var item in GetAllEntityTypes())
-            {
-                <option value="@item.Value">@item.Value</option>
-            }
-        </select>
-
-        <button class="btn btn-primary" @onclick="AddNewRow">Add new row</button>
-    </div>
-
-    <div class="mb-3">
-        <button class="btn btn-primary" @onclick="GenerateAndDownloadSqlFile">Download SQL file</button>
-    </div>
-
-    @if (table != null)
-    {
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th colspan="2">Current Database Table Schema</th>
-                </tr>
-
-                <tr>
-                    <td>Table Name: @table.Name</td>
-                    <td>Number of Columns: @table.RowsCount</td>
-                </tr>
-
-                @if (table.TableEntitySchema != null && table.TableEntitySchema.Count > 0)
-                {
-                    <tr>
-                        <th>Column Name</th>
-                        <th>Column Type</th>
-                    </tr>
-                }
-            </thead>
-            <tbody>
-                @foreach (var item in table.TableEntitySchema)
-                {
-                    @if (item != null)
-                    {
-                        <tr>
-                            <td>@item.NameInTable</td>
-                            <td>@item.GetType().Name</td>
+            <div class="table-responsive rounded border border-white mb-4">
+                <table class="table table-borderless bg-black">
+                    <thead>
+                        <tr class="text-white">
+                            <th>Название столбца</th>
+                            <th>Тип данных</th>
+                            <th></th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var column in Columns)
+                        {
+                            <tr class="text-white">
+                                <td>
+                                    <input type="text" class="form-control bg-black text-white" @bind-value="column.Name" />
+                                </td>
+                                <td>
+                                    <select class="form-select bg-black text-white" @bind="@column.DataType">
+                                        @foreach (var item in GetAllEntityTypes())
+                                        {
+                                            <option value="@item.Value">@item.Value</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn btn-outline-light bg-black rounded" @onclick="() => RemoveColumn(column)">Удалить</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mb-4">
+                <button class="btn btn-outline-light bg-black rounded" @onclick="AddColumn">Добавить столбец</button>
+            </div>
+
+            <div class="mb-4">
+                Выберите тип данных:
+            </div>
+            <div class="mb-4">
+
+                <select class="form-select bg-black text-white" @bind="@DataType">
+                    @foreach (var item in Enum.GetValues(typeof(OutputDataTypes)))
+                    {
+                        <option value="@item">@item</option>
                     }
-                }
-            </tbody>
-        </table>
-    }
-}
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <button class="btn btn-outline-light bg-black rounded" @onclick="GenerateData">Сгенерировать данные</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 @code {
-    Table table;
-    string tableName;
-    int rowCount;
-    string typeName;
-    string columnName;
-    string columnType;
-    TableEntity entityType = new TableEntity();
-
-    private void AddNewRow()
+    private string TableName { get; set; } = "Таблица 1";
+    private int RowCount { get; set; } = 10;
+    private OutputDataTypes DataType;
+    private Dictionary<string, string> Parameters = new Dictionary<string, string>();
+    private List<Column> Columns { get; set; } = new List<Column>
     {
-        var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(columnName, columnType);
-        table.AddNewEntityToTableSchema((TableEntity)entity);
+        new Column { Name = "", DataType = "" },
+    };
+    private List<TableEntity> GetAllEntityTypes()
+    {
+        return TableEntityRepository.GetAll(typeof(EntityType));
     }
 
-    private void AddNewTable()
+    private void AddColumn()
     {
-        table = new Table(tableName, rowCount);
+        Columns.Add(new Column { Name = "", DataType = "" });
     }
 
-    private async void GenerateAndDownloadSqlFile()
+    private void RemoveColumn(Column column)
     {
-        var fileStream = await SqlGenerationService.GenerateFileStream(table);
-        var fileName = "query.sql";
-        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        Columns.Remove(column);
+        if (Columns.Count<1)
+        {
+            Columns.Add(new Column { Name = "", DataType = "" });
+        }
+    }
+
+    private async Task GenerateData()
+    {
+        var table = new Table(TableName, RowCount);
+        foreach (var item in Columns)
+        {
+            var entity = TextToDataTypeConversionHelper.ConvertClassNameToDataClass(item.Name, item.DataType);
+            table.AddNewEntityToTableSchema((TableEntity)entity);
+        }
+        var data =  await MockProcessor.ProcessDataGeneration(table, Parameters, DataType);
+        var fileName = $"query.{data.FileExtensionName}";
+        using var streamRef = new DotNetStreamReference(stream: data.FileStream);
 
         await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 
-    private List<TableEntity> GetAllEntityTypes()
+    private class Column
     {
-        return TableEntityRepository.GetAll(typeof(EntityType));
+        public string Name { get; set; }
+        public string DataType { get; set; }
     }
 }

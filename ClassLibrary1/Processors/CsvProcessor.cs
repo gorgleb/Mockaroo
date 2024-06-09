@@ -6,9 +6,9 @@ namespace MockarooLibrary.Processors
     /// <summary>
     /// Реализует логику генерации csv данных
     /// </summary>
-    public class CsvProcessor : MockProcessor
+    public class CsvProcessor : Generator
     {
-        public CsvProcessor() : base(null)
+        public CsvProcessor()
         {
         }
 
@@ -17,7 +17,7 @@ namespace MockarooLibrary.Processors
         /// </summary>
         /// <param name="curentTable"></param>
         /// <returns></returns>
-        protected override async Task<string> GenerateData(Table currentTable)
+        public override async Task<string> GenerateData(Table currentTable, Dictionary<string, string>? parameters)
         {
             var sb = new StringBuilder();
             string header = await GenerateHeader(currentTable);
@@ -39,7 +39,7 @@ namespace MockarooLibrary.Processors
                 if (item == currentTable.TableEntitySchema.Last())
                     sb.Append($"{item.NameInTable.ToString()}");
                 else
-                    sb.Append($"{item.NameInTable.ToString()}");
+                    sb.Append($"{item.NameInTable.ToString()},");
             }
             return sb.ToString();
         }

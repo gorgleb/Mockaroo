@@ -1,0 +1,119 @@
+﻿@page "/userdataset"
+@using Mockaroo.Services;
+@using MockarooLibrary.Repository;
+
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Text
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@using MockarooLibrary.Services.Interfaces
+@using Microsoft.JSInterop.WebAssembly
+
+@inject IJSRuntime JS;
+@inject IUserDataSetsService UserDataSetsService;
+
+<div class="top-margin"></div>
+
+<div class="text-center text-white">
+    <h3>Ваши наборы данных</h3>
+    <p>На этой странице вы можете загрузить свои собственные наборы данных для использования в Mockaroo.</p>
+</div>
+
+<div class="container bg-black text-white p-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="table-responsive rounded border border-white mb-4">
+                <table class="table table-borderless bg-black">
+                    <thead>
+                        <tr class="text-white">
+                            <th>Название</th>
+                            <th>Дата загрузки</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dataset in UserDataSetNames)
+                        {
+                            <tr class="text-white">
+                                <td>
+                                    <div class="form-control bg-black text-white">
+                                        @dataset
+                                    </div>
+
+                                </td>
+                                <td>
+                                    <div class="form-control bg-black text-white">
+                                        @DateTime.Now.AddHours(-5).ToString("dd.MM.yyyy HH:mm")
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-outline-light bg-black rounded" @onclick="() => DeleteDataSet(dataset)">Удалить</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="top-margin"></div>
+
+                <div class="card bg-black border-white mt-4 mx-auto">
+                    <div class="card-title text-center font-weight-bold">Загрузить набор данных</div>
+                </div>  
+                <div class="card-body">
+                    <table class="table table-borderless bg-black">
+                        <tbody>
+                           
+                                <tr class="text-white">
+                                <td>
+                                    <input type="text" class="form-control bg-black text-white" @bind-value="newDataSetName" />
+                                </td>
+                                    <td>
+                                    <div class="form-control bg-black text-white">
+                                        <InputFile class="form-control-file bg-black text-white" OnChange="HandleFileSelected" placeholder="Введите имя" />
+                                    </div>
+                                    </td>
+                                </tr>
+                            
+                        </tbody>
+                    </table>
+                   
+                </div>
+            </div>
+            </div>
+            </div>
+            </div>
+          
+            
+
+
+@code {
+    private string newDataSetName = "dataset";
+    private List<string> UserDataSetNames { get; set; } = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Выполните необходимые действия при загрузке страницы
+        UserDataSetNames = await UserDataSetsService.GetUserDataSetNames();
+    }
+
+    private async Task DeleteDataSet(string datasetName)
+    {
+        await UserDataSetsService.DeleteUserDataSet(datasetName);
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+
+            var csvText = Encoding.UTF8.GetString(buffer);
+
+
+            await UserDataSetsService.UploadUserDataSet(newDataSetName, csvText);
+        }
+    }
+}

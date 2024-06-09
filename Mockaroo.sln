@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MockarooBlazor", "MockarooB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MockarooLibrary", "ClassLibrary1\MockarooLibrary.csproj", "{65539A9C-E8D1-444C-AEBD-8C64A4043263}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "..\ConsoleAPP\ConsoleApp1\ConsoleApp1.csproj", "{B80FE11C-2C85-4418-944C-28E5988A30A5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MockarooWebApi", "MockarooWebApi\MockarooWebApi.csproj", "{934415D6-819D-4721-9E6E-297C5D9BA22C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{65539A9C-E8D1-444C-AEBD-8C64A4043263}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65539A9C-E8D1-444C-AEBD-8C64A4043263}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65539A9C-E8D1-444C-AEBD-8C64A4043263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B80FE11C-2C85-4418-944C-28E5988A30A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B80FE11C-2C85-4418-944C-28E5988A30A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B80FE11C-2C85-4418-944C-28E5988A30A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B80FE11C-2C85-4418-944C-28E5988A30A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{934415D6-819D-4721-9E6E-297C5D9BA22C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{934415D6-819D-4721-9E6E-297C5D9BA22C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{934415D6-819D-4721-9E6E-297C5D9BA22C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{934415D6-819D-4721-9E6E-297C5D9BA22C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
